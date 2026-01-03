@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Analyzer | Rajvir</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --accent: #38bdf8;
+            --success: #22c55e;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #334155;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* Mobile Header */
+        header {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            margin: 0;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .credit-tag {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+
+        /* Mobile Input Section */
+        .card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .mobile-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .full-width { grid-column: span 2; }
+
+        .input-box {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent);
+            padding-left: 4px;
+        }
+
+        input {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            width: 100%;
+            outline: none;
+        }
+
+        input:focus { border-color: var(--accent); }
+
+        /* Action Buttons */
+        .actions {
+            margin-top: 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        button {
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-analyze { background: var(--accent); color: #0f172a; }
+        .btn-export { background: var(--success); color: white; }
+
+        /* Mobile Table View (Cards for small screens) */
+        .results-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .teacher-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 14px;
+            border-left: 5px solid transparent;
+            position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        .teacher-card.status-green { border-left-color: var(--success); }
+        .teacher-card.status-red { border-left-color: #ef4444; }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .rank-circle {
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--accent);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .teacher-name {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-main);
+            margin-bottom: 2px;
+        }
+
+        .school-info {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .card-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; }
+        .stat-value { font-size: 14px; font-weight: 700; }
+
+        .badge-status {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .bg-green { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .bg-red { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+        /* Empty State */
+        .no-data {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>📊 Performance</h1>
+    <div class="credit-tag">Design by Rajvir</div>
+</header>
+
+<div class="card">
+    <div class="mobile-grid">
+        <div class="input-box full-width">
+            <label>Select Excel File</label>
+            <input type="file" id="file" accept=".xls,.xlsx">
+        </div>
+        <div class="input-box">
+            <label>From Date</label>
+            <input type="date" id="from">
+        </div>
+        <div class="input-box">
+            <label>To Date</label>
+            <input type="date" id="to">
+        </div>
+        <div class="input-box full-width">
+            <label>Max Results (Limit)</label>
+            <input type="number" id="limit" value="50">
+        </div>
+    </div>
+
+    <div class="actions">
+        <button class="btn-analyze" onclick="analyze()"><i class="fas fa-bolt"></i> Run</button>
+        <button class="btn-export" onclick="downloadData()"><i class="fas fa-file-excel"></i> Export</button>
+    </div>
+</div>
+
+<div id="results" class="results-container">
+    <div class="no-data">Upload file & click Run to see data.</div>
+</div>
+
+<script>
+let rawData = [];
+let filteredResults = [];
+
+document.getElementById("file").addEventListener("change", e => {
+    const reader = new FileReader();
+    reader.onload = e => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        rawData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+        Swal.fire({ icon: 'success', title: 'Ready!', text: 'File loaded.', timer: 1000, showConfirmButton: false, position: 'top-end' });
+    };
+    reader.readAsArrayBuffer(e.target.files[0]);
+});
+
+function excelDateToJS(excelDate) {
+    if (!excelDate) return null;
+    return typeof excelDate === "number" ? new Date((excelDate - 25569) * 86400 * 1000) : new Date(excelDate);
+}
+
+function analyze() {
+    if (rawData.length === 0) return Swal.fire("Empty", "Upload Excel first", "warning");
+
+    const fromVal = document.getElementById("from").value;
+    const toVal = document.getElementById("to").value;
+    const limit = parseInt(document.getElementById("limit").value) || 50;
+
+    if (!fromVal || !toVal) return Swal.fire("Check Dates", "Pick Start & End dates", "info");
+
+    const from = new Date(fromVal);
+    const to = new Date(toVal);
+    let map = {};
+
+    rawData.forEach(row => {
+        let d = excelDateToJS(row.Date);
+        let teacher = row["Subject Teacher"];
+        if (d && d >= from && d <= to && teacher) {
+            if (!map[teacher]) {
+                map[teacher] = { 
+                    teacher, 
+                    school: row["School Name"] || "N/A", 
+                    subject: row["Subject"] || "N/A", 
+                    count: 0 
+                };
+            }
+            map[teacher].count++;
+        }
+    });
+
+    filteredResults = Object.values(map).sort((a, b) => b.count - a.count).slice(0, limit);
+    renderMobileUI();
+}
+
+function renderMobileUI() {
+    const container = document.getElementById("results");
+    container.innerHTML = "";
+
+    if (filteredResults.length === 0) {
+        container.innerHTML = '<div class="no-data">No records found for these dates.</div>';
+        return;
+    }
+
+    filteredResults.forEach((r, i) => {
+        const status = r.count >= 3 ? "Green" : "Red";
+        const statusClass = r.count >= 3 ? "status-green" : "status-red";
+        const badgeClass = r.count >= 3 ? "bg-green" : "bg-red";
+
+        container.innerHTML += `
+            <div class="teacher-card ${statusClass}">
+                <div class="card-header">
+                    <div>
+                        <div class="teacher-name">${r.teacher}</div>
+                        <div class="school-info"><i class="fas fa-school"></i> ${r.school}</div>
+                    </div>
+                    <div class="rank-circle">#${i + 1}</div>
+                </div>
+                <div class="card-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Subject</span>
+                        <span class="stat-value">${r.subject}</span>
+                    </div>
+                    <div class="stat-item" style="align-items: center;">
+                        <span class="stat-label">Classes</span>
+                        <span class="stat-value">${r.count}</span>
+                    </div>
+                    <div class="stat-item" style="align-items: flex-end;">
+                        <span class="stat-label">Status</span>
+                        <span class="badge-status ${badgeClass}">${status}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function downloadData() {
+    if (filteredResults.length === 0) return Swal.fire("No Data", "Run analysis first", "warning");
+
+    const exportData = filteredResults.map((r, i) => ({
+        Rank: i + 1,
+        Teacher: r.teacher,
+        School: r.school,
+        Subject: r.subject,
+        Total_Classes: r.count,
+        Status: r.count >= 3 ? "Green" : "Red"
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Report");
+    XLSX.writeFile(wb, `Report_By_Rajvir.xlsx`);
+}
+</script>
+
+</body>
+</html>
