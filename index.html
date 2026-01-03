@@ -285,7 +285,10 @@ function analyze() {
     if (!fromVal || !toVal) return Swal.fire("Check Dates", "Pick Start & End dates", "info");
 
     const from = new Date(fromVal);
-    const to = new Date(toVal);
+from.setHours(0,0,0,0);
+
+const to = new Date(toVal);
+to.setHours(23,59,59,999);
     let map = {};
 
     rawData.forEach(row => {
@@ -371,3 +374,4 @@ function downloadData() {
 
 </body>
 </html>
+
